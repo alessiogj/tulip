@@ -1,10 +1,11 @@
-version: "3.2"
 services:
   mongo:
     image: mongo:5
+    restart: always
     networks:
       - internal
-    restart: always
+    volumes:
+      - ./mongo:/data/db
     ports:
       - "27017:27017"
 
@@ -80,7 +81,6 @@ services:
       TICK_LENGTH: ${TICK_LENGTH}
       FLAGID_SCAN: ${FLAGID_SCAN}
       FLAG_LIFETIME: ${FLAG_LIFETIME}
-      PCAP_OVER_IP: ${PCAP_OVER_IP}
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
@@ -97,9 +97,28 @@ services:
       - internal
     volumes:
       - ${TRAFFIC_DIR_HOST}:${TRAFFIC_DIR_DOCKER}:ro
-    command: "./enricher -eve ${TRAFFIC_DIR_DOCKER}/eve.json"
+      - ./suricata/logs:/var/log/suricata:ro
+    command: "./enricher -eve /var/log/suricata/eve.json"
     environment:
       TULIP_MONGO: ${TULIP_MONGO}
+      FLAG_REGEX: ${FLAG_REGEX}
+      FLAGID_SCAN: ${FLAGID_SCAN}
+      FLAG_LIFETIME: ${FLAG_LIFETIME}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
+  pcap-manager:
+    image: alpine:latest
+    restart: unless-stopped
+    volumes:
+      - ./suricata/pcap:/pcap
+    command: >
+      sh -c "
+        mkdir -p /pcap/captures_old &&
+        while true; do
+          find /pcap -type f -name '*.pcap*' -mmin +30 -exec mv {} /pcap/captures_old/ \;
+          sleep 60
+        done
+      "
 networks:
   internal:
