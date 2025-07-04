@@ -10,6 +10,7 @@ import {
   FLOW_LIST_REFETCH_INTERVAL_MS,
 } from "../const";
 import useDebounce from "../hooks/useDebounce";
+import { useSSE } from "../hooks/useSSE";
 
 import ReactApexChart from "react-apexcharts";
 import { ApexOptions } from "apexcharts";
@@ -43,7 +44,7 @@ export const Corrie = () => {
 
   const debounced_text_filter = useDebounce(text_filter, 300);
 
-  const { data: flowData, isLoading } = useGetFlowsQuery(
+  const { data: flowData, isLoading, refetch } = useGetFlowsQuery(
     {
       "flow.data": debounced_text_filter,
       dst_ip: service?.ip,
@@ -62,6 +63,12 @@ export const Corrie = () => {
       pollingInterval: FLOW_LIST_REFETCH_INTERVAL_MS,
     }
   );
+
+  // Hook SSE per notifiche real-time
+  useSSE(() => {
+    console.log('SSE: Triggering refetch for new flows in Corrie');
+    refetch();
+  });
 
   // TODO: fix the below transformation - move it to server
   // Diederik gives you a beer once it has been fixed

@@ -347,7 +347,7 @@ func (service AssemblerService) WatchDir(watch_dir string) {
 					// accepts files with prefixes that start with .pcap (.pcapng .pcap1 etc)
 					if strings.HasPrefix(filepath.Ext(event.Name), ".pcap") {
 						log.Println("Found new file", event.Name, event.Op.String())
-						time.Sleep(2 * time.Second) // FIXME; bit of race here between file creation and writes.
+						time.Sleep(500 * time.Millisecond) // Ridotto da 2 secondi a 500ms
 						service.HandlePcapUri(event.Name)
 					}
 				}

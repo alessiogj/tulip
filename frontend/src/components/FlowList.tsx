@@ -23,6 +23,7 @@ import { HeartIcon as EmptyHeartIcon } from "@heroicons/react/outline";
 import classes from "./FlowList.module.css";
 import { format } from "date-fns";
 import useDebounce from "../hooks/useDebounce";
+import { useSSE } from "../hooks/useSSE";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import classNames from "classnames";
 import { Tag } from "./Tag";
@@ -85,6 +86,12 @@ export function FlowList() {
       pollingInterval: FLOW_LIST_REFETCH_INTERVAL_MS,
     }
   );
+
+  // Hook SSE per notifiche real-time
+  useSSE(() => {
+    console.log('SSE: Triggering refetch for new flows');
+    refetch();
+  });
 
   // TODO: fix the below transformation - move it to server
   // Diederik gives you a beer once it has been fixed

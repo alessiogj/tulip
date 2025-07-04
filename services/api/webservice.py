@@ -23,7 +23,9 @@
 # along with Flower.  If not, see <https://www.gnu.org/licenses/>.
 
 import traceback
-from flask import Flask, Response, send_file
+import time
+import threading
+from flask import Flask, Response, send_file, stream_template_string
 
 from configurations import services, traffic_dir, start_date, tick_length, flag_regex
 from pathlib import Path
@@ -40,6 +42,7 @@ application = Flask(__name__)
 CORS(application)
 db = DB()
 
+# Variabili globali per gestire SSE rimmosse - ora usiamo controllo database diretto
 
 def return_json_response(object):
     return Response(json_util.dumps(object), mimetype='application/json')
@@ -51,6 +54,34 @@ def return_text_response(object):
 @application.route('/')
 def hello_world():
     return 'Hello, World!'
+
+@application.route('/events')
+def events():
+    """Server-Sent Events endpoint per notificare aggiornamenti in tempo reale"""
+    def event_stream():
+        last_flow_count = 0
+        last_heartbeat = time.time()
+        
+        while True:
+            current_time = time.time()
+            
+            # Controlla se ci sono nuovi flussi nel database
+            try:
+                current_flow_count = db.pcap_coll.count_documents({})
+                if current_flow_count > last_flow_count:
+                    last_flow_count = current_flow_count
+                    yield f"data: {{'type': 'update', 'timestamp': {current_time}, 'flowCount': {current_flow_count}}}\n\n"
+            except Exception as e:
+                yield f"data: {{'type': 'error', 'message': 'Database error: {str(e)}'}}\n\n"
+            
+            # Heartbeat ogni 30 secondi
+            if current_time - last_heartbeat > 30:
+                yield f"data: {{'type': 'heartbeat', 'timestamp': {current_time}}}\n\n"
+                last_heartbeat = current_time
+                
+            time.sleep(2)  # Controlla ogni 2 secondi
+    
+    return Response(event_stream(), mimetype='text/event-stream')
 
 @application.route('/tick_info')
 def getTickInfo():
