@@ -13,7 +13,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
@@ -37,7 +36,7 @@ var promisc = true
 var watch_dir = flag.String("dir", "", "Directory to watch for new pcaps")
 var mongodb = flag.String("mongo", "", "MongoDB dns name + port (e.g. mongo:27017)")
 var flag_regex = flag.String("flag", "", "flag regex, used for flag in/out tagging")
-var pcap_over_ip = flag.String("pcap-over-ip", "", "PCAP-over-IP host + port (e.g. remote:1337)")
+
 var bpf = flag.String("bpf", "", "BPF filter")
 var nonstrict = flag.Bool("nonstrict", false, "Do not check strict TCP / FSM flags")
 var experimental = flag.Bool("experimental", false, "Enable experimental features.")
@@ -213,10 +212,6 @@ func main() {
 		}
 	}
 
-	if *pcap_over_ip == "" {
-		*pcap_over_ip = os.Getenv("PCAP_OVER_IP")
-	}
-
 	// if flagid scans should be done
 	if !*flagid {
 		flagid_val := os.Getenv("FLAGID_SCAN")
@@ -271,30 +266,8 @@ func main() {
 		service.HandlePcapUri(uri)
 	}
 
-	// If PCAP-over-IP was configured, connect to it
-	// NOTE: Configuring PCAP-over-IP ignores watch dir
-	if *pcap_over_ip != "" {
-		// for handling multiple pcap over ip
-		if strings.Contains(*pcap_over_ip, ",") {
-			pcapOverIPs := strings.Split(*pcap_over_ip, ",")
-			waitGroup := sync.WaitGroup{}
-			waitGroup.Add(len(pcapOverIPs))
-			for _, pcapIP := range pcapOverIPs {
-				go func(pcapIP string) {
-					defer waitGroup.Done()
-					connectToPCAPOverIP(service, pcapIP)
-				}(pcapIP)
-			}
-			waitGroup.Wait()
-		} else {
-			connectToPCAPOverIP(service, *pcap_over_ip)
-		}
-	} else {
-		// If a watch dir was configured, handle all files in the directory, then
-		// keep monitoring it for new files.
-		if *watch_dir != "" {
-			service.WatchDir(*watch_dir)
-		}
+	if *watch_dir != "" {
+		service.WatchDir(*watch_dir)
 	}
 }
 
@@ -374,7 +347,7 @@ func (service AssemblerService) WatchDir(watch_dir string) {
 					// accepts files with prefixes that start with .pcap (.pcapng .pcap1 etc)
 					if strings.HasPrefix(filepath.Ext(event.Name), ".pcap") {
 						log.Println("Found new file", event.Name, event.Op.String())
-						time.Sleep(2 * time.Second) // FIXME; bit of race here between file creation and writes.
+						time.Sleep(500 * time.Millisecond) // Ridotto da 2 secondi a 500ms
 						service.HandlePcapUri(event.Name)
 					}
 				}

@@ -132,3 +132,7 @@ workspace.xml
 .idea
 
 /traffic
+
+/captures
+
+mongo/

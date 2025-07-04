@@ -95,7 +95,6 @@ services:
       TICK_LENGTH: ${TICK_LENGTH}
       FLAGID_SCAN: ${FLAGID_SCAN}
       FLAG_LIFETIME: ${FLAG_LIFETIME}
-      PCAP_OVER_IP: ${PCAP_OVER_IP}
     extra_hosts:
       - "host.docker.internal:host-gateway"
 

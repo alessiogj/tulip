@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suricata Monitor</title>
+    <script>
+        // Apri una connessione Server-Sent Events all'endpoint /events
+        const evt = new EventSource('/events');
+        // Alla ricezione di un messaggio, ricarica la pagina
+        evt.onmessage = () => {
+            window.location.reload();
+        };
+        // Gestione degli errori di connessione (opzionale)
+        evt.onerror = (err) => {
+            console.error('EventSource failed:', err);
+        };
+    </script>
+</head>
+<body>
+    <h1>Suricata Monitor</h1>
+    <p>Questa pagina si ricaricherà automaticamente quando Suricata rileva nuovi pacchetti.</p>
+    <p>Ultimo aggiornamento: <span id="last-update"></span></p>
+
+    <script>
+        // Aggiorna il timestamp dell'ultimo aggiornamento
+        function updateTimestamp() {
+            const now = new Date();
+            document.getElementById('last-update').textContent = now.toLocaleString();
+        }
+        updateTimestamp();
+    </script>
+</body>
+</html> 
