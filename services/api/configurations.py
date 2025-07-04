@@ -33,7 +33,7 @@ flag_regex = os.getenv("FLAG_REGEX", "[A-Z0-9]{31}=")
 mongo_server = f'mongodb://{mongo_host}/'
 vm_ip = os.getenv("VM_IP", "10.60.39.1")
 
-services = [{"ip": vm_ip, "port": 3000, "name": "gadgethorse-gadgethorse"},
-            {"ip": vm_ip, "port": 5050, "name": "cheesycheats-cheats_api"},
-            {"ip": vm_ip, "port": 9999, "name": "minecclicker-server"},
-            {"ip": vm_ip, "port": 5000, "name": "cheesycheats-cheats_manager"}]
+services = [{"ip": vm_ip, "port": 3113, "name": "mudarabah-web"},
+            {"ip": vm_ip, "port": 8080, "name": "scrotolls-app"},
+            {"ip": vm_ip, "port": 4280, "name": "sesame-sesame"},
+            {"ip": vm_ip, "port": 9122, "name": "crystore-cry_store"}]
