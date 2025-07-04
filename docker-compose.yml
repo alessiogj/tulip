@@ -111,12 +111,14 @@ services:
     image: alpine:latest
     restart: unless-stopped
     volumes:
-      - ./suricata/pcap:/pcap
+      - ${TRAFFIC_DIR_HOST}:${TRAFFIC_DIR_DOCKER}
+    environment:
+      TRAFFIC_DIR_DOCKER: ${TRAFFIC_DIR_DOCKER}
     command: >
       sh -c "
-        mkdir -p /pcap/captures_old &&
+        mkdir -p ${TRAFFIC_DIR_DOCKER}/captures_old &&
         while true; do
-          find /pcap -type f -name '*.pcap*' -mmin +30 -exec mv {} /pcap/captures_old/ \;
+          find ${TRAFFIC_DIR_DOCKER} -maxdepth 1 -type f -name '*.pcap*' -mmin +30 -exec mv {} ${TRAFFIC_DIR_DOCKER}/captures_old/ \;
           sleep 60
         done
       "
